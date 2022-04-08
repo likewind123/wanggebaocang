@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>网格爆仓计算器-单边亏损</title>
+	<script src="https://cdn.staticfile.org/jquery/1.10.2/jquery.min.js"></script>
+    <!-- 引入 echarts.js -->
+    <script src="https://cdn.staticfile.org/echarts/4.3.0/echarts.min.js"></script>
+	<style>
+	li{ display:inline} 
+	</style>
+</head>
+
+<body>
+    <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <div id="main1" ><table id="main" border="1">
+	<tr>
+	<td><a>币的名称:</a><td>
+	<td><input id="tokenname" value="GMT"></input></td>
+	</tr>
+	<tr>
+	<td><a>单边给定价格:</a><td>
+	<td><input id="htmldingprice" value="2.29"></input></td>
+	</tr>
+	<tr>
+	<td><a>开仓价格:</a><td>
+	<td><input id="htmlopenprice" value="2.29"></input></td>
+	</tr>
+	<tr>
+	<td><a>网格下限价格</a><td>
+	<td><input id="htmlpricelow"  value="1.2"></input></td>
+	</tr>
+	<tr>
+	<td><a>网格上限价格</a><td>
+	<td><input id="htmlpricehigh"  value="3.6"></input></td>
+	</tr>
+	<tr>
+	<td><a>网格数量</a><td>
+	<td><input id="htmlgridnumber"  value="100"></input></td>
+	</tr>
+	<tr>
+	<td><a>杠杆倍数</a><td>
+	<td><input id="htmlleverage"  value="20"></input></td>
+	</tr>
+	<tr>
+	<td><a>开仓投入U数量</a><td>
+	<td><input id="htmlusdnumber"  value="10000"></input></td>
+	</tr>
+	<tr>
+	<td><a>保证金数量</a><td>
+	<td><input id="htmluseusdnumber"  value="10000"></input></td>
+	</tr>
+	<tr>
+	<td><a>最小开仓张数</a><td>
+	<td><input id="htmlminCoinNumber" value="1"></input></td>
+	</tr>
+	<tr>
+	<td><a>最小开仓张数有几位小数</a><td>
+	<td><input id="htmlminxiaoshudian"  value="0"></input></td>
+	</tr>
+	<tr>
+	<td><a>手续费</a><td>
+	<td><input id="htmlc_rate"  value="0.0002"></input></td>
+	</tr>
+	</table ></div>
+	<button type="button" onclick=calc() style="width:100px;height:50px">提交</button>
+	<br>
+	<div id="log" width="600" height="600"></div>
+    <script type="text/javascript">
+	
+       //网格类，用于计算该网格的在某个价格下亏损多少钱
+ class Grid {
+    //构造函数
+    constructor(nCoinNumber, price,c_rate, openprice) {
+        this.nCoinNumber = nCoinNumber;//类中变量
+        this.price = price;
+        this.c_rate = c_rate;
+        this.openprice = openprice;
+        if(price<openprice)
+        {
+            this.blong = true;
+        }
+        else
+        {
+            this.blong = false;
+        }
+    }
+    //类中函数
+    Getlost(nowprice) {
+        if(this.blong == true)
+        {
+            if(nowprice>this.price)
+            {
+                this.nLost =0;
+                return 0;
+            }
+            this.nLost = (this.price -nowprice)*this.nCoinNumber + this.nCoinNumber*this.price*this.c_rate;
+            return this.nLost;
+        }
+        else
+        {
+            if(nowprice<this.price)
+            {
+                this.nLost =0;
+                return 0;
+            }
+            this.nLost = (nowprice-this.price )*this.nCoinNumber + this.nCoinNumber*this.price*this.c_rate;
+            return this.nLost;
+        }
+    }
+}
+
+/*参数
+ *开仓价格 openprice
+ *网格上限 pricelow
+ *网格下限 pricehigh
+ *网格数量 gridnumber
+ *杠杆倍数 leverage
+ *开仓投入U数量  usdnumber
+ *保证金数量 useusdnumber 可以决定补仓，比如初始投入1万U，我后面快爆了又投入1万U，这个时候就有2万U的保证金
+ *等差等比网格  暂时只支持等差网格
+ *最小开仓张数 minCoinNumber
+ *最小开仓张数有几位小数 minxiaoshudian
+ *手续费 c_rate
+ */
+/*
+openprice = 2.29;
+pricelow = 1.2;
+pricehigh = 3.6;
+gridnumber = 100;
+leverage = 20;
+usdnumber =10000;
+useusdnumber = 20000;
+c_rate = 2/10000;
+minCoinNumber = 1;
+minxiaoshudian = 0;*/
+function calc()
+{
+	openprice 		= Number(htmlopenprice.value);
+	pricelow 		= Number(htmlpricelow.value);
+	pricehigh 		= Number(htmlpricehigh.value);
+	gridnumber 		= Number(htmlgridnumber.value);
+	leverage 		= Number(htmlleverage.value);
+	usdnumber 		= Number(htmlusdnumber.value);
+	useusdnumber 	= Number(htmluseusdnumber.value);
+	c_rate 			= Number(htmlc_rate.value);
+	minCoinNumber 	= Number(htmlminCoinNumber.value);
+	minxiaoshudian 	= Number(htmlminxiaoshudian.value);
+	dingprice 		= Number(htmldingprice.value);
+	CreateGrid(openprice,pricelow,pricehigh,gridnumber,leverage,usdnumber,useusdnumber,c_rate,minCoinNumber,minxiaoshudian,dingprice);
+}
+
+//这里暂时用的小币种，最小开一张合约这种。如果比特币之类的要调整
+//实际计算代码
+function CreateGrid(openprice,pricelow,pricehigh,gridnumber,leverage,usdnumber,useusdnumber,c_rate,minCoinNumber,minxiaoshudian,dingprice)
+{
+	//debugger;
+    var GridList= []
+    var nprice = (pricehigh -pricelow)/gridnumber;
+    nprice = nprice.toFixed(4)
+    var nCoinNumber = (leverage*usdnumber/(gridnumber*openprice));
+    if(nCoinNumber<minCoinNumber)
+    {
+        console.log("保证金太少，无法开网格");
+    }
+    nCoinNumber = nCoinNumber.toFixed(minxiaoshudian)
+    //开仓的时候靠近网格的一格不开
+    var nmid = parseInt((openprice - pricelow)/nprice);
+    
+    var lowmid = openprice - pricelow - nmid*nprice;
+    var highmid =pricelow + (nmid+1)*nprice - openprice;
+
+    var missmid = nmid;
+    if(highmid < lowmid)
+    {
+        missmid = nmid+1;
+    }
+
+
+    for(i=0;i<gridnumber+1;i++)
+    {
+        if(i== missmid)
+        {
+            continue;
+        }
+        var grid =new Grid(nCoinNumber,pricelow + i*nprice,c_rate,openprice);
+        GridList.push(grid);
+    }
+    console.log("------------------------------------------------------");
+	
+    var nowprice = dingprice;
+    
+        var los = 0;
+        for(i=0;i<gridnumber;i++)
+        {
+            var grid = GridList[i];
+            los =los + grid.Getlost(nowprice);
+        }
+        los = los.toFixed(4);
+			
+            console.log("开仓信息:")
+            console.log("开仓价格:" + openprice);
+			console.log("当单边行情价格为:" + dingprice);
+            console.log("网格最低价：" + pricelow);
+          
+            console.log("网格最高价：" + pricehigh);
+          
+            console.log("网格数量：" + gridnumber);
+          
+            console.log("网格杠杆：" + leverage + "x");
+          
+            console.log("网格开仓金额" + usdnumber +"usd");
+          
+            console.log("网格保证金金额" + useusdnumber + "usd");
+          
+            console.log("单边给定价格亏损" + los+"usd");
+			console.log("单边给定价格亏损百分比" + (los*100/useusdnumber).toFixed(2) +"%");
+          
+          
+    console.log("------------------------------------------------------");
+}
+
+
+
+	(function () {
+    var old = console.log;
+    var logger = document.getElementById('log');
+    console.log = function (message) {
+        if (typeof message == 'object') {
+            logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(message) : message) + '<br />';
+        } else {
+            logger.innerHTML += message + '<br />';
+        }
+    }
+})();	
+		
+		
+    </script>
+</body>
+</html>
