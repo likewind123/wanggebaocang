@@ -253,8 +253,10 @@ function CreateGrid(openprice, pricelow, pricehigh, gridnumber, leverage, usdnum
     var nprice = (pricehigh - pricelow) / gridnumber;
     nprice = nprice.toFixed(4)
     var ewaigrid = 0;
-    var zuoduowangge =  parseInt((openprice - pricelow) / nprice);
-    var zuokongwangge = parseInt((pricehigh - openprice) / nprice);
+    var zuoduowangge =  parseInt((pricehigh - openprice) / nprice);
+    var zuokongwangge = parseInt((openprice - pricelow) / nprice);
+    
+    
     if(gridtype == 1)
     {
         ewaigrid = zuoduowangge;
