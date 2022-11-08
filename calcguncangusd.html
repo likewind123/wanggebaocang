@@ -16,17 +16,18 @@
 
 <body>
     <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+    <h1>币本位合约</h1>
     <div id="main1">
         <table id="main" border="1">
             <tr>
                 <td><a>币的名称:</a>
                 <td>
-                <td><input id="tokenname" value="Luna"></input></td>
+                <td><input id="tokenname" value="BNB"></input></td>
             </tr>
             <tr>
                 <td><a>开仓价格:</a>
                 <td>
-                <td><input id="htmlopenprice" value="100"></input></td>
+                <td><input id="htmlopenprice" value="330"></input></td>
             </tr>
             <tr>
                 <td><a>滚仓比例:</a>
@@ -69,21 +70,20 @@
                 <td><input id="htmladdtype" value="0"></input></td>
             </tr>
         </table>
-       
+
 
     </div>
     <button type="button" onclick=calc() style="width:100px;height:50px">提交</button>
     <button type="button" onclick="clean()" style="width:100px;height:50px">清除记录</button>
     <button type="button" onclick="cleantable()" style="width:100px;height:50px">清除表格</button>
- 
+
     <br>
     <table id="result" border="1">
     </table>
 
     <div id="log" width="600" height="600"></div>
     <script type="text/javascript">
-        function cleantable()
-        {
+        function cleantable() {
             var tableresult = document.getElementById('result');
             cleanchild(tableresult)
             btablecreate = false;
@@ -110,35 +110,31 @@
 
         var btablecreate = false;
 
-        function addtable(tablerows)
-        {
-            var tableresult =  document.getElementById('result');
-            if(btablecreate==false)
-            {
+        function addtable(tablerows) {
+            var tableresult = document.getElementById('result');
+            if (btablecreate == false) {
                 btablecreate = true;
                 //创建表头
                 var tr = document.createElement('tr');
-                var tablehead = ["当前价格","合约持仓价格","合约持仓张数","本次增加合约张数","当前盈利","盈利比","爆仓价格"];
+                var tablehead = ["当前价格", "合约持仓价格", "合约持仓张数", "本次增加合约张数", "当前盈利", "盈利比", "爆仓价格"];
                 //当前价格
-                for(i=0;i<tablehead.length;i++)
-                {
+                for (i = 0; i < tablehead.length; i++) {
                     var thnowprice = document.createElement('th');
-			    var anowprice = document.createElement('a');
-			
-			    anowprice.innerHTML =tablehead[i] + "\t\t\t\t";
-                thnowprice.appendChild(anowprice);
-                tr.appendChild(thnowprice);
+                    var anowprice = document.createElement('a');
+
+                    anowprice.innerHTML = tablehead[i] + "\t\t\t\t";
+                    thnowprice.appendChild(anowprice);
+                    tr.appendChild(thnowprice);
                 }
 
                 tableresult.appendChild(tr);
             }
             var tr = document.createElement('tr');
-            for(i=0;i<tablerows.length;i++)
-            {
+            for (i = 0; i < tablerows.length; i++) {
                 var td = document.createElement('td');
-			    var alable = document.createElement('a');
-			
-			    alable.innerHTML =tablerows[i] ;
+                var alable = document.createElement('a');
+
+                alable.innerHTML = tablerows[i];
                 td.appendChild(alable);
                 tr.appendChild(td);
             }
@@ -150,11 +146,11 @@
             openprice = Number(htmlopenprice.value);
             guicangbili = Number(htmlguicangbili.value);
             leverage = Number(htmlleverage.value);
-            usdnumber =  Number(htmlusdnumber.value);
+            usdnumber = Number(htmlusdnumber.value);
             //useusdnumber = 10000;
-            c_rate =  Number(htmlc_rate.value);
+            c_rate = Number(htmlc_rate.value);
 
-            stopprice =Number(htmlmubiaoprice.value);
+            stopprice = Number(htmlmubiaoprice.value);
             minCoinNumber = Number(htmlminCoinNumber.value);
             minxiaoshudian = Number(htmlminxiaoshudian.value);
             // 0 等比，1等差
@@ -168,13 +164,13 @@
             if (openprice < stopprice) {
                 guncangtype = 1;
                 guncangprice = ((stopprice - openprice) * guicangbili)
-                heyuepiao = new Heyue(0, 0, c_rate, openprice, true);
+                heyuepiao = new Heyue(0, 0, c_rate, openprice, leverage,true);
 
             }
             else {
                 guncangtype = 2;
                 guncangprice = ((openprice - stopprice) * guicangbili)
-                heyuepiao = new Heyue(0, 0, c_rate, openprice, false);
+                heyuepiao = new Heyue(0, 0, c_rate, openprice, leverage,false);
             }
 
 
@@ -210,7 +206,7 @@
                 // 计算合约爆仓价
                 var totalzijin = usdnumber + win;
                 var baocangjia = calcjisuanjiage(heyuepiao, nowprice, guncangtype, totalzijin);
-                var myresult = [nowprice,heyuepiao.price,heyuepiao.nCoinNumber,nCoinNumber,win,(win * 100 / usdnumber).toFixed(2) + "%",baocangjia];
+                var myresult = [nowprice, heyuepiao.price, heyuepiao.nCoinNumber, nCoinNumber, win, (win * 100 / usdnumber).toFixed(2) + "%", baocangjia];
                 addtable(myresult);
                 console.log("持仓价格:" + heyuepiao.price + "    当前持仓张数:" + heyuepiao.nCoinNumber + "     本次增加合约张数:" + nCoinNumber + "    当前价格：" + nowprice + "    当前盈利:" + win + "    盈利比：" + (win * 100 / usdnumber).toFixed(2) + "%" + "    当前爆仓价：" + baocangjia);
                 if (guncangtype == 1) {
@@ -255,9 +251,12 @@
                 while (nowprice > 0) {
 
                     var win = piao.Getwin(nowprice)
+                    var usd = piao.GetNowUSD(nowprice)
+                    
 
+                    var dangqianyingli = win + usd;
 
-                    var dangqianyingli = win + useusdnumber;
+                    //var dangqianyingli = win + useusdnumber;
                     if (dangqianyingli < 0) {
 
                         return nowprice;
@@ -278,14 +277,23 @@
 
                     var win = piao.Getwin(nowprice);
 
-                    var dangqianyingli = win + useusdnumber;
+                    var usd = piao.GetNowUSD(nowprice)
+
+
+                    var dangqianyingli = win + usd;
+
+                    //var dangqianyingli = win + useusdnumber;
                     if (dangqianyingli < 0) {
                         return nowprice;
 
 
                     }
+                    if(nowprice>200000)
+                    {
+                        return 999999999
+                    }
 
-                    nowprice = nowprice + 0.0001;
+                    nowprice = nowprice + 0.001;
                 }
 
             }
@@ -293,12 +301,12 @@
 
         class Heyue {
             //构造函数
-            constructor(nCoinNumber, price, c_rate, openprice, blong) {
+            constructor(nCoinNumber, price, c_rate, openprice, leverage,blong) {
                 this.nCoinNumber = nCoinNumber;//每格开多少张的合约
                 this.price = price;
                 this.c_rate = c_rate;
                 this.openprice = openprice;
-
+                this.leverage = leverage;
                 this.blong = blong;
 
             }
@@ -328,6 +336,10 @@
                     return 0 - this.nLost;
                 }
 
+            }
+
+            GetNowUSD(nowprice) {
+                return this.nCoinNumber * nowprice /this.leverage*(1-0.0251*this.leverage);
             }
         }
 
